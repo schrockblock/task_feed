@@ -2,3 +2,4 @@
 bin/*
 *.eml
 *.iml
+out/*
