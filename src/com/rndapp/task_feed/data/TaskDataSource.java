@@ -62,6 +62,20 @@ public class TaskDataSource {
         return newTask;
     }
 
+    public void updateTask(Task task){
+        ContentValues values = new ContentValues();
+        values.put(TaskOpenHelper.COLUMN_SERVER_ID, task.getServerId());
+        values.put(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID, task.getProjectId());
+        values.put(TaskOpenHelper.COLUMN_POINTS, task.getPoints());
+        values.put(TaskOpenHelper.COLUMN_POSITION, task.getPosition());
+        int complete = task.isCompleted() ? 1 : 0;
+        values.put(TaskOpenHelper.COLUMN_COMPLETED, complete);
+        values.put(TaskOpenHelper.COLUMN_TEXT, task.getText());
+
+        database.update(TaskOpenHelper.TABLE_TASKS, values, TaskOpenHelper.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(task.getLocalId())});
+    }
+
     public void deleteTask(Task task) {
         long id = task.getLocalId();
         System.out.println("Task deleted with id: " + id);
@@ -69,8 +83,8 @@ public class TaskDataSource {
                 + " = " + id, null);
     }
 
-    public Vector<Task> getAllTasks() {
-        Vector<Task> tasks = new Vector<Task>();
+    public ArrayList<Task> getAllTasks() {
+        ArrayList<Task> tasks = new ArrayList<Task>();
 
         Cursor cursor = database.query(TaskOpenHelper.TABLE_TASKS,
                 allColumns, null, null, null, null, null);
@@ -93,7 +107,7 @@ public class TaskDataSource {
         task.setProjectId(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID)));
         task.setText(cursor.getString(cursor.getColumnIndex(TaskOpenHelper.COLUMN_TEXT)));
         task.setPoints(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POINTS)));
-        task.position = cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POSITION));
+        task.setPosition(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POSITION)));
         task.setCompleted(1 == cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_COMPLETED)));
         return task;
     }

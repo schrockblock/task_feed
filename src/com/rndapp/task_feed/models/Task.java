@@ -1,5 +1,8 @@
 package com.rndapp.task_feed.models;
 
+import android.content.Context;
+import com.rndapp.task_feed.data.TaskDataSource;
+
 import java.io.Serializable;
 
 /**
@@ -16,7 +19,18 @@ public class Task implements Serializable{
     private String text;
     private boolean completed = false;
     private int points = 1;
-    public int position;
+    private int position;
+
+    public static void updateTask(Context context, Task task){
+        TaskDataSource source = new TaskDataSource(context);
+        source.open();
+        source.updateTask(task);
+        source.close();
+    }
+
+    public String toString(){
+        return text;
+    }
 
     public String getText() {
         return text;
@@ -64,5 +78,13 @@ public class Task implements Serializable{
 
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
     }
 }

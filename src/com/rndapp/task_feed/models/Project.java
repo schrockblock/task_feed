@@ -1,7 +1,11 @@
 package com.rndapp.task_feed.models;
 
+import android.content.Context;
+import com.rndapp.task_feed.data.ProjectDataSource;
+import com.rndapp.task_feed.data.TaskDataSource;
+
 import java.io.Serializable;
-import java.util.Vector;
+import java.util.ArrayList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,15 +18,61 @@ public class Project implements Serializable{
     private int serverId;
     private int localId;
     private String title;
-    private Vector<Task> tasks = new Vector<Task>();
+    private ArrayList<Task> tasks = new ArrayList<Task>();
     private int color;
 
-    public String getFirstTask(){
-        return tasks.firstElement().getText();
+    public String toString(){
+        return title;
     }
 
-    public void addTask(Task task){
+    public String getFirstTaskText(){
+        String output = null;
+        if (tasks.size() != 0){
+            output = tasks.get(0).getText();
+        }
+        return output;
+    }
+
+    public void addTask(Context context, Task task){
+        TaskDataSource source = new TaskDataSource(context);
+        source.open();
+        task = source.createTask(task.getText(),
+                this.getServerId(),
+                task.getServerId(),
+                tasks.size(),
+                task.getPoints(),
+                task.isCompleted());
+        source.close();
         tasks.add(task);
+    }
+
+    public void removeFirstTask(Context context){
+        if (tasks.size() != 0){
+            deleteTask(context, 0);
+        }
+    }
+
+    public void deleteTask(Context context, int position){
+        TaskDataSource source = new TaskDataSource(context);
+        source.open();
+        source.deleteTask(tasks.get(position));
+        source.close();
+        tasks.remove(position);
+    }
+
+    public void updateTask(Context context, Task task){
+        Task.updateTask(context, task);
+    }
+
+    public Task getTask(int position){
+        return tasks.get(position);
+    }
+
+    public static void updateProject(Context context, Project project){
+        ProjectDataSource source = new ProjectDataSource(context);
+        source.open();
+        source.updateProject(project);
+        source.close();
     }
 
     public int getColor() {
@@ -55,5 +105,9 @@ public class Project implements Serializable{
 
     public void setLocalId(int localId) {
         this.localId = localId;
+    }
+
+    public ArrayList<Task> getTasks() {
+        return tasks;
     }
 }

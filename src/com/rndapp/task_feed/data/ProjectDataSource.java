@@ -1,8 +1,6 @@
 package com.rndapp.task_feed.data;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -55,6 +53,18 @@ public class ProjectDataSource {
         return newProject;
     }
 
+    public void updateProject(Project project){
+        ContentValues values = new ContentValues();
+        values.put(ProjectOpenHelper.COLUMN_SERVER_ID, project.getServerId());
+        values.put(ProjectOpenHelper.COLUMN_COLOR, project.getColor());
+        values.put(ProjectOpenHelper.COLUMN_TITLE, project.getTitle());
+
+        database.update(ProjectOpenHelper.TABLE_PROJECTS,
+                values,
+                ProjectOpenHelper.COLUMN_ID + " = ?",
+                new String[]{String.valueOf(project.getLocalId())});
+    }
+
     //DOES NOT DELETE TASKS ASSOCIATED WITH PROJECT!!
     public void deleteProject(Project project) {
         long id = project.getLocalId();
@@ -63,8 +73,8 @@ public class ProjectDataSource {
                 + " = " + id, null);
     }
 
-    public Vector<Project> getAllProjects() {
-        Vector<Project> projects = new Vector<Project>();
+    public ArrayList<Project> getAllProjects() {
+        ArrayList<Project> projects = new ArrayList<Project>();
 
         Cursor cursor = database.query(ProjectOpenHelper.TABLE_PROJECTS,
                 allColumns, null, null, null, null, null);
