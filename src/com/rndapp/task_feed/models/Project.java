@@ -6,6 +6,8 @@ import com.rndapp.task_feed.data.TaskDataSource;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Created with IntelliJ IDEA.
@@ -43,6 +45,7 @@ public class Project implements Serializable{
                 task.getPoints(),
                 task.isCompleted());
         source.close();
+        task.setPosition(tasks.size());
         tasks.add(task);
     }
 
@@ -61,7 +64,29 @@ public class Project implements Serializable{
     }
 
     public void updateTask(Context context, Task task){
+        if (task.getPosition() != tasks.indexOf(task)){
+            tasks.remove(task);
+            if (task.getPosition() == tasks.size()-1){
+                tasks.add(task);
+            }else {
+                tasks.add(task.getPosition(), task);
+            }
+        }
         Task.updateTask(context, task);
+        updatePositions(context);
+    }
+
+    private void updatePositions(Context context){
+        for (Task task : tasks){
+            if (task.getPosition() != tasks.indexOf(task)){
+                task.setPosition(tasks.indexOf(task));
+                Task.updateTask(context, task);
+            }
+        }
+    }
+
+    public void sortTasks(){
+        Collections.sort(tasks);
     }
 
     public Task getTask(int position){

@@ -139,6 +139,11 @@ public class ProjectFragment extends SherlockFragment {
         View layout = getSherlockActivity().getLayoutInflater().inflate(R.layout.new_task, null);
 
         final EditText taskTitle = (EditText)layout.findViewById(R.id.task);
+        final EditText taskPos = (EditText)layout.findViewById(R.id.position);
+
+        //populate text fields
+        taskTitle.setText(task.getText());
+        taskPos.setText(String.valueOf(task.getPosition()));
 
         // set dialog message
         alertDialogBuilder
@@ -149,6 +154,7 @@ public class ProjectFragment extends SherlockFragment {
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 task.setText(taskTitle.getText().toString());
+                                task.setPosition(Integer.parseInt(taskPos.getText().toString()));
                                 project.updateTask(getActivity(), task);
                                 adapter.notifyDataSetChanged();
                             }
@@ -168,7 +174,8 @@ public class ProjectFragment extends SherlockFragment {
 
         View layout = getSherlockActivity().getLayoutInflater().inflate(R.layout.new_project, null);
 
-        final EditText taskTitle = (EditText)layout.findViewById(R.id.projectName);
+        final EditText projectTitle = (EditText)layout.findViewById(R.id.projectName);
+        projectTitle.setText(project.getTitle());
 
         final View swatch = layout.findViewById(R.id.color_swatch);
 
@@ -227,7 +234,7 @@ public class ProjectFragment extends SherlockFragment {
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                project.setTitle(taskTitle.getText().toString());
+                                project.setTitle(projectTitle.getText().toString());
                                 project.setColor(swatchColor);
                                 Project.updateProject(getActivity(), project);
                                 delegate.setupNav();

@@ -117,6 +117,11 @@ public class FeedActivity extends SherlockFragmentActivity implements
                 }
             }
         }
+
+        //sort
+        for (Project project : projects){
+            project.sortTasks();
+        }
     }
 
     private void switchFragBack(Fragment frag){

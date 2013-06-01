@@ -12,7 +12,7 @@ import java.io.Serializable;
  * Time: 1:32 PM
  *
  */
-public class Task implements Serializable{
+public class Task implements Serializable, Comparable<Task>{
     private int serverId;
     private int localId;
     private int projectId;
@@ -26,6 +26,11 @@ public class Task implements Serializable{
         source.open();
         source.updateTask(task);
         source.close();
+    }
+
+    @Override
+    public int compareTo(Task task){
+        return this.position - task.position;
     }
 
     public String toString(){
