@@ -9,6 +9,7 @@
         android:targetSdkVersion="17" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="andriod.permission.BIND_REMOTEVIEWS" />
 
     <application
         android:allowBackup="true"
@@ -24,6 +25,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:icon="@drawable/cw"
+                  android:label="@string/app_name"
+                  android:name=".broadcast_receivers.ListWidgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                       android:resource="@xml/widget_provider" />
+        </receiver>
+        <service android:name=".services.ListWidgetService"
+                 android:permission="android.permission.BIND_REMOTEVIEWS" />
     </application>
 
 </manifest>

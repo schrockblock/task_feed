@@ -1,5 +1,7 @@
 package com.rndapp.task_feed.activities;
 
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.os.Bundle;
 
 import android.support.v4.app.Fragment;
@@ -7,6 +9,7 @@ import android.widget.*;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.rndapp.task_feed.R;
+import com.rndapp.task_feed.broadcast_receivers.ListWidgetProvider;
 import com.rndapp.task_feed.data.ProjectDataSource;
 import com.rndapp.task_feed.data.TaskDataSource;
 import com.rndapp.task_feed.fragments.FeedFragment;
@@ -127,5 +130,18 @@ public class FeedActivity extends SherlockFragmentActivity implements
     private void switchFragBack(Fragment frag){
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, frag).addToBackStack(frag.getClass().getCanonicalName()).commit();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Intent updateWidget = new Intent(this, ListWidgetProvider.class);
+        updateWidget.setAction("update_widget");
+        PendingIntent pending = PendingIntent.getBroadcast(this, 0, updateWidget, PendingIntent.FLAG_CANCEL_CURRENT);
+        try {
+            pending.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
     }
 }
