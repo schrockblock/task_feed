@@ -15,12 +15,12 @@
     <color name="rare">#642b84</color>
     
     <color name="smog">#ff464D5C</color>
-    <color name="android_robot">#ffA4C639</color>
-    <color name="pastel_green">#ffD1E29C</color>
+    <color name="green">#93DB70</color>
     <color name="goldenrod">#ffFAFAD2</color>
-    <color name="pastel_red">#ffF7977A</color>
-    <color name="pastel_blue">#ffA0A0FF</color>
-    <color name="pastel_yellow">#ffD9D919</color>
-    <color name="pastel_orange">#ffFFB347</color>
-    <color name="pastel_plum">#ffDDA0DD</color>
+    <color name="red">#FF4545</color>
+    <color name="blue">#009ACD</color>
+    <color name="yellow">#F7F730</color>
+    <color name="orange">#FF904F</color>
+    <color name="plum">#9B30FF</color>
+    <color name="turquoise">#01C5BB</color>
 </resources>

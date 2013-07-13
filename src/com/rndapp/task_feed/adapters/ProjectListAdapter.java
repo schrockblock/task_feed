@@ -24,11 +24,25 @@ public class ProjectListAdapter extends BaseAdapter {
 
     public ProjectListAdapter(Context context, ArrayList<Project> projects){
         this.context = context;
-        this.projects = projects;
+        this.projects = (ArrayList<Project>) projects.clone();
+
+        removeEmptyProjects();
     }
 
     public void removeItemFromProject(int position){
         projects.get(position).removeFirstTask(context);
+
+        removeEmptyProjects();
+    }
+
+    private void removeEmptyProjects(){
+        for (Project project : projects){
+            if (project.isEmpty()){
+                projects.remove(project);
+                removeEmptyProjects();
+                break;
+            }
+        }
     }
 
     @Override

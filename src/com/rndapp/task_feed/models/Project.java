@@ -41,12 +41,13 @@ public class Project implements Serializable{
         task = source.createTask(task.getText(),
                 this.getServerId(),
                 task.getServerId(),
-                tasks.size(),
+                0,
                 task.getPoints(),
                 task.isCompleted());
         source.close();
-        task.setPosition(tasks.size());
-        tasks.add(task);
+        task.setPosition(0);
+        tasks.add(0,task);
+        updatePositions(context);
     }
 
     public void removeFirstTask(Context context){
@@ -61,6 +62,7 @@ public class Project implements Serializable{
         source.deleteTask(tasks.get(position));
         source.close();
         tasks.remove(position);
+        updatePositions(context);
     }
 
     public void updateTask(Context context, Task task){
@@ -98,6 +100,10 @@ public class Project implements Serializable{
         source.open();
         source.updateProject(project);
         source.close();
+    }
+
+    public boolean isEmpty(){
+        return tasks.size() == 0;
     }
 
     public int getColor() {

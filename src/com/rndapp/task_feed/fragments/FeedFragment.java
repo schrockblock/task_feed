@@ -66,12 +66,22 @@ public class FeedFragment extends SherlockFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 getSherlockActivity().getSupportActionBar().setSelectedNavigationItem(
-                        position + 1);
+                        adjustPosition(position) + 1);
             }
         });
 
         lv.setAdapter(adapter);
         return rootView;
+    }
+
+    private int adjustPosition(int position){
+        int result = position;
+        for (int i = 0; i < result+1; i++){
+            if (projects.get(i).isEmpty()){
+                result++;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -106,33 +116,38 @@ public class FeedFragment extends SherlockFragment {
         Button btnGold = (Button)layout.findViewById(R.id.btn_yellow);
         Button btnOrange = (Button)layout.findViewById(R.id.btn_orange);
         Button btnGreen = (Button)layout.findViewById(R.id.btn_green);
+        Button btnTurquoise = (Button)layout.findViewById(R.id.btn_turquoise);
 
         View.OnClickListener listener = new View.OnClickListener() {
             public void onClick(View v) {
                 switch (v.getId()){
                     case R.id.btn_blue:
-                        swatchColor = getResources().getColor(R.color.pastel_blue);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_blue));
+                        swatchColor = getResources().getColor(R.color.blue);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.blue));
                         break;
                     case R.id.btn_green:
-                        swatchColor = getResources().getColor(R.color.pastel_green);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_green));
+                        swatchColor = getResources().getColor(R.color.green);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.green));
                         break;
                     case R.id.btn_orange:
-                        swatchColor = getResources().getColor(R.color.pastel_orange);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_orange));
+                        swatchColor = getResources().getColor(R.color.orange);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.orange));
                         break;
                     case R.id.btn_plum:
-                        swatchColor = getResources().getColor(R.color.pastel_plum);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_plum));
+                        swatchColor = getResources().getColor(R.color.plum);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.plum));
                         break;
                     case R.id.btn_red:
-                        swatchColor = getResources().getColor(R.color.pastel_red);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_red));
+                        swatchColor = getResources().getColor(R.color.red);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.red));
                         break;
                     case R.id.btn_yellow:
-                        swatchColor = getResources().getColor(R.color.pastel_yellow);
-                        swatch.setBackgroundColor(getResources().getColor(R.color.pastel_yellow));
+                        swatchColor = getResources().getColor(R.color.yellow);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.yellow));
+                        break;
+                    case R.id.btn_turquoise:
+                        swatchColor = getResources().getColor(R.color.turquoise);
+                        swatch.setBackgroundColor(getResources().getColor(R.color.turquoise));
                         break;
                 }
             }
@@ -144,6 +159,7 @@ public class FeedFragment extends SherlockFragment {
         btnGreen.setOnClickListener(listener);
         btnGold.setOnClickListener(listener);
         btnPlum.setOnClickListener(listener);
+        btnTurquoise.setOnClickListener(listener);
 
         swatchColor = getResources().getColor(R.color.goldenrod);
 

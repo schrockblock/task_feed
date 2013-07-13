@@ -129,7 +129,8 @@ public class FeedActivity extends SherlockFragmentActivity implements
 
     private void switchFragBack(Fragment frag){
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, frag).addToBackStack(frag.getClass().getCanonicalName()).commit();
+                .replace(R.id.container, frag)
+                .addToBackStack(frag.getClass().getCanonicalName()).commit();
     }
 
     @Override
