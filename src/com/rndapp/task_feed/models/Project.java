@@ -1,13 +1,17 @@
 package com.rndapp.task_feed.models;
 
 import android.content.Context;
+import com.google.gson.Gson;
+import com.rndapp.task_feed.api.ServerCommunicator;
 import com.rndapp.task_feed.data.ProjectDataSource;
 import com.rndapp.task_feed.data.TaskDataSource;
+import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -104,6 +108,50 @@ public class Project implements Serializable{
 
     public boolean isEmpty(){
         return tasks.size() == 0;
+    }
+
+    public void syncProject(){
+
+    }
+
+    public static Project uploadProjectToServer(Context context, Project project){
+        ServerCommunicator server = new ServerCommunicator(context);
+        HashMap<String, Object> hash = new HashMap<String, Object>();
+        hash.put("project",project);
+        Project newProject = new Project();
+        newProject.setColor(project.color);
+        newProject.setTitle(project.title);
+        try {
+            JSONObject jsonObject = new JSONObject(new Gson().toJson(hash));
+            String json = server.postToEndpointAuthed("projects",jsonObject, true);
+            newProject = new Gson().fromJson(json, Project.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        for (Task task : project.getTasks()){
+             newProject.getTasks().add(Task.uploadTaskToServer(context, task));
+        }
+        return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Project project = (Project) o;
+
+        if (localId != project.localId) return false;
+        if (serverId != 0 && project.serverId != 0 && serverId != project.serverId) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = serverId;
+        result = 31 * result + localId;
+        return result;
     }
 
     public int getColor() {

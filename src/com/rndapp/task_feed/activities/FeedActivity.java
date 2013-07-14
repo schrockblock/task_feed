@@ -38,6 +38,8 @@ public class FeedActivity extends SherlockFragmentActivity implements
         //load projects
         loadProjects();
 
+
+
         setupNav();
 	}
 
@@ -122,8 +124,22 @@ public class FeedActivity extends SherlockFragmentActivity implements
         }
 
         //sort
-        for (Project project : projects){
+        for (final Project project : projects){
             project.sortTasks();
+        }
+    }
+
+    private void uploadProjects(){
+        for (final Project project : projects){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (project.getServerId() == 0){
+                        Project.updateProject(FeedActivity.this,
+                                Project.uploadProjectToServer(FeedActivity.this, project));
+                    }
+                }
+            }).start();
         }
     }
 

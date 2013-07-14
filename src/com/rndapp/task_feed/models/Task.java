@@ -33,6 +33,33 @@ public class Task implements Serializable, Comparable<Task>{
         return this.position - task.position;
     }
 
+    public static Task uploadTaskToServer(Context context, Task task){
+
+        return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Task task = (Task) o;
+
+        if (projectId != task.projectId) return false;
+        if (serverId != 0 && task.serverId != 0 && serverId != task.serverId) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = serverId;
+        result = 31 * result + localId;
+        result = 31 * result + projectId;
+        result = 31 * result + text.hashCode();
+        return result;
+    }
+
     public String toString(){
         return text;
     }
