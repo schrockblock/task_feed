@@ -1,7 +1,10 @@
 package com.rndapp.task_feed.fragments;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +15,12 @@ import com.actionbarsherlock.view.Menu;
 import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.rndapp.task_feed.R;
+import com.rndapp.task_feed.activities.LoginActivity;
 import com.rndapp.task_feed.adapters.ProjectListAdapter;
 import com.rndapp.task_feed.data.ProjectDataSource;
 import com.rndapp.task_feed.interfaces.ProjectDisplayer;
 import com.rndapp.task_feed.listeners.SwipeDismissListViewTouchListener;
+import com.rndapp.task_feed.models.ActivityUtils;
 import com.rndapp.task_feed.models.Project;
 
 import java.util.ArrayList;
@@ -54,7 +59,7 @@ public class FeedFragment extends SherlockFragment {
                         new SwipeDismissListViewTouchListener.OnDismissCallback() {
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
-                                    adapter.removeItemFromProject(position);
+                                    new RemoveItemTask().execute(position);
                                 }
                                 adapter.notifyDataSetChanged();
                             }
@@ -93,12 +98,38 @@ public class FeedFragment extends SherlockFragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
-        newProject();
+        switch (item.getItemId()){
+            case R.id.action_add_project:
+                newProject();
+                break;
+            case R.id.action_logout:
+                ActivityUtils.logout(getActivity());
+                break;
+        }
         return true;
     }
 
-    int swatchColor;
+    public void removeItemFromProject(int position){
+        projects.get(position).removeFirstTask(getActivity());
+    }
 
+    private class RemoveItemTask extends AsyncTask<Integer, String, Object> {
+
+        //param[0] = int position
+        @Override
+        protected String doInBackground(Integer... params) {
+            removeItemFromProject(params[0]);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o){
+            adapter.removeEmptyProjects();
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    int swatchColor;
     public void newProject(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getActivity());
         // set title
@@ -171,14 +202,7 @@ public class FeedFragment extends SherlockFragment {
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                ProjectDataSource source = new ProjectDataSource(getActivity());
-                                source.open();
-                                Project project = source.createProject(taskTitle.getText().toString(), swatchColor, 0);
-                                source.close();
-                                projects.add(project);
-                                delegate.setupNav();
-                                getSherlockActivity().getSupportActionBar().setSelectedNavigationItem(
-                                        projects.indexOf(project) + 1);
+                                new UploadNewProjectTask().execute(taskTitle.getText().toString());
                             }
                         })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -186,5 +210,25 @@ public class FeedFragment extends SherlockFragment {
                 });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    private class UploadNewProjectTask extends AsyncTask<String, String, Project> {
+
+        //param[0] = project name
+        @Override
+        protected Project doInBackground(String... params) {
+            Project project = new Project(params[0],swatchColor);
+            project = Project.uploadProjectToServer(getActivity(), project);
+            project = Project.addProjectToDatabase(getActivity(), project);
+            projects.add(project);
+            return project;
+        }
+
+        @Override
+        protected void onPostExecute(Project project){
+            delegate.setupNav();
+            getSherlockActivity().getSupportActionBar().setSelectedNavigationItem(
+                    projects.indexOf(project) + 1);
+        }
     }
 }

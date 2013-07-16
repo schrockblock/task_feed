@@ -4,14 +4,12 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 import com.rndapp.task_feed.R;
 import com.rndapp.task_feed.models.Task;
 
 import java.util.ArrayList;
-import java.util.Vector;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,6 +25,7 @@ public class TaskListAdapter extends BaseAdapter {
     public TaskListAdapter(Context context, ArrayList<Task> tasks){
         this.context = context;
         this.tasks = tasks;
+        removeFinishedTasks();
     }
 
     @Override
@@ -36,12 +35,22 @@ public class TaskListAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return getItem(position).getPosition();
+        return getItem(position).getOrder();
     }
 
     @Override
     public int getCount(){
         return tasks.size();
+    }
+
+    private void removeFinishedTasks(){
+        for (Task task : tasks){
+            if (task.isFinished()){
+                tasks.remove(task);
+                removeFinishedTasks();
+                break;
+            }
+        }
     }
 
     @Override
@@ -52,7 +61,7 @@ public class TaskListAdapter extends BaseAdapter {
         }
 
         Task task = getItem(position);
-        ((TextView)convertView.findViewById(R.id.tv_task)).setText(task.getText());
+        ((TextView)convertView.findViewById(R.id.tv_task)).setText(task.getName());
         return convertView;
     }
 }

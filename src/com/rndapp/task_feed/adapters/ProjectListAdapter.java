@@ -29,13 +29,7 @@ public class ProjectListAdapter extends BaseAdapter {
         removeEmptyProjects();
     }
 
-    public void removeItemFromProject(int position){
-        projects.get(position).removeFirstTask(context);
-
-        removeEmptyProjects();
-    }
-
-    private void removeEmptyProjects(){
+    public void removeEmptyProjects(){
         for (Project project : projects){
             if (project.isEmpty()){
                 projects.remove(project);
@@ -69,7 +63,7 @@ public class ProjectListAdapter extends BaseAdapter {
 
         Project project = getItem(position);
         TextView tv = (TextView)convertView.findViewById(R.id.tv_task);
-        tv.setText(project.getTitle() + ": " + project.getFirstTaskText());
+        tv.setText(project.getName() + ": " + project.getFirstTaskText());
         tv.setBackgroundColor(project.getColor());
         return convertView;
     }

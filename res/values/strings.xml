@@ -5,9 +5,11 @@
     <string name="action_add_task">Add Task</string>
     <string name="edit_task">Edit Task</string>
     <string name="action_add_project">Add Project</string>
+    <string name="action_logout">Logout</string>
     <string name="action_edit_project">Edit Project</string>
     <string name="username_hint">username or email</string>
     <string name="pwd_hint">password</string>
+    <string name="remember_me">Remember me</string>
     <string name="create_account">Create Account</string>
     <string name="login">Login</string>
 

@@ -1,9 +1,16 @@
 package com.rndapp.task_feed.models;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
+import com.google.gson.Gson;
+import com.rndapp.task_feed.api.ServerCommunicator;
 import com.rndapp.task_feed.data.TaskDataSource;
+import org.json.JSONObject;
 
 import java.io.Serializable;
+import java.util.Date;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,13 +20,15 @@ import java.io.Serializable;
  *
  */
 public class Task implements Serializable, Comparable<Task>{
-    private int serverId;
+    private int id;
     private int localId;
-    private int projectId;
-    private String text;
-    private boolean completed = false;
+    private int project_id;
+    private String name;
+    private boolean finished = false;
     private int points = 1;
-    private int position;
+    private int order;
+    private Date created_at;
+    private Date updated_at;
 
     public static void updateTask(Context context, Task task){
         TaskDataSource source = new TaskDataSource(context);
@@ -30,12 +39,46 @@ public class Task implements Serializable, Comparable<Task>{
 
     @Override
     public int compareTo(Task task){
-        return this.position - task.position;
+        return this.order - task.order;
     }
 
     public static Task uploadTaskToServer(Context context, Task task){
+        ServerCommunicator server = new ServerCommunicator(context);
+        HashMap<String, Object> hash = new HashMap<String, Object>();
+        hash.put("task",task);
+        Task newTask = new Task();
+        try {
+            JSONObject jsonObject = new JSONObject(new Gson().toJson(hash));
+            SharedPreferences sp = context.getSharedPreferences(ActivityUtils.USER_ID_PREF, Activity.MODE_PRIVATE);
+            String json = server.postToEndpointAuthed("users/"+sp.getInt("user_id", 0)+"/projects/"+task.project_id+"/tasks",jsonObject);
+            newTask = new Gson().fromJson(json, Task.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return newTask;
+    }
 
-        return null;
+    public static Task markAsFinished(Context context, Task task){
+        task.setFinished(true);
+        task = Task.updateTaskOnServer(context, task);
+        updateTask(context, task);
+        return task;
+    }
+
+    public static Task updateTaskOnServer(Context context, Task task){
+        ServerCommunicator server = new ServerCommunicator(context);
+        HashMap<String, Object> hash = new HashMap<String, Object>();
+        hash.put("task",task);
+        try {
+            JSONObject jsonObject = new JSONObject(new Gson().toJson(hash));
+            SharedPreferences sp = context.getSharedPreferences(ActivityUtils.USER_ID_PREF, Activity.MODE_PRIVATE);
+            server.putToEndpointAuthed(
+                    "users/" + sp.getInt("user_id", 0) + "/projects/" + task.project_id + "/tasks/" + task.getId(),
+                    jsonObject);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return task;
     }
 
     @Override
@@ -45,39 +88,55 @@ public class Task implements Serializable, Comparable<Task>{
 
         Task task = (Task) o;
 
-        if (projectId != task.projectId) return false;
-        if (serverId != 0 && task.serverId != 0 && serverId != task.serverId) return false;
+        if (project_id != task.project_id) return false;
+        if (id != task.id) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = serverId;
+        int result = id;
         result = 31 * result + localId;
-        result = 31 * result + projectId;
-        result = 31 * result + text.hashCode();
+        result = 31 * result + project_id;
+        result = 31 * result + name.hashCode();
         return result;
     }
 
+    public Date getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(Date created_at) {
+        this.created_at = created_at;
+    }
+
+    public Date getUpdated_at() {
+        return updated_at;
+    }
+
+    public void setUpdated_at(Date updated_at) {
+        this.updated_at = updated_at;
+    }
+
     public String toString(){
-        return text;
+        return name;
     }
 
-    public String getText() {
-        return text;
+    public String getName() {
+        return name;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getServerId() {
-        return serverId;
+    public int getId() {
+        return id;
     }
 
-    public void setServerId(int serverId) {
-        this.serverId = serverId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getLocalId() {
@@ -88,20 +147,20 @@ public class Task implements Serializable, Comparable<Task>{
         this.localId = localId;
     }
 
-    public int getProjectId() {
-        return projectId;
+    public int getProject_id() {
+        return project_id;
     }
 
-    public void setProjectId(int projectId) {
-        this.projectId = projectId;
+    public void setProject_id(int project_id) {
+        this.project_id = project_id;
     }
 
-    public boolean isCompleted() {
-        return completed;
+    public boolean isFinished() {
+        return finished;
     }
 
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
+    public void setFinished(boolean finished) {
+        this.finished = finished;
     }
 
     public int getPoints() {
@@ -112,11 +171,11 @@ public class Task implements Serializable, Comparable<Task>{
         this.points = points;
     }
 
-    public int getPosition() {
-        return position;
+    public int getOrder() {
+        return order;
     }
 
-    public void setPosition(int position) {
-        this.position = position;
+    public void setOrder(int order) {
+        this.order = order;
     }
 }

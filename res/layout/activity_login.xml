@@ -18,6 +18,12 @@
             android:inputType="textPassword"
             android:hint="@string/pwd_hint"
             android:id="@+id/password_field" android:layout_gravity="center"/>
+    <CheckBox
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:id="@+id/remember_me_checkbox"
+            android:text="@string/remember_me" />
 
     <LinearLayout
             android:orientation="horizontal"

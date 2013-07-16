@@ -1,6 +1,8 @@
 package com.rndapp.task_feed.models;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.rndapp.task_feed.api.ServerCommunicator;
 import com.rndapp.task_feed.data.ProjectDataSource;
@@ -9,8 +11,8 @@ import org.json.JSONObject;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -21,43 +23,81 @@ import java.util.HashMap;
  *
  */
 public class Project implements Serializable{
-    private int serverId;
+    private int id;
     private int localId;
-    private String title;
+    private String name;
+    private Date created_at;
+    private Date updated_at;
     private ArrayList<Task> tasks = new ArrayList<Task>();
     private int color;
 
+    public Project(String name, int color) {
+        this.name = name;
+        this.color = color;
+    }
+
+    public Project() {}
+
     public String toString(){
-        return title;
+        return name;
     }
 
     public String getFirstTaskText(){
         String output = null;
         if (tasks.size() != 0){
-            output = tasks.get(0).getText();
+            for (Task task : tasks){
+                if (!task.isFinished()) {
+                    output = task.getName();
+                    break;
+                }
+            }
         }
         return output;
     }
 
-    public void addTask(Context context, Task task){
+    public void addTaskToBeginning(Context context, Task task){
         TaskDataSource source = new TaskDataSource(context);
         source.open();
-        task = source.createTask(task.getText(),
-                this.getServerId(),
-                task.getServerId(),
-                0,
+        task = source.createTask(task.getName(),
+                this.getId(),
+                task.getId(),
+                task.getOrder(),
                 task.getPoints(),
-                task.isCompleted());
+                task.isFinished());
         source.close();
-        task.setPosition(0);
         tasks.add(0,task);
         updatePositions(context);
     }
 
+    public void addTaskRespectingOrder(Context context, Task task){
+        TaskDataSource source = new TaskDataSource(context);
+        source.open();
+        task = source.createTask(task.getName(),
+                this.getId(),
+                task.getId(),
+                task.getOrder(),
+                task.getPoints(),
+                task.isFinished());
+        source.close();
+        tasks.add(0,task);
+        sortTasks();
+    }
+
     public void removeFirstTask(Context context){
         if (tasks.size() != 0){
-            deleteTask(context, 0);
+            int indexOfTask = -1;
+            for (Task task : tasks){
+                if (!task.isFinished()) {
+                    indexOfTask = tasks.indexOf(task);
+                    break;
+                }
+            }
+            if (indexOfTask != -1) markTaskAtPositionAsFinished(context, indexOfTask);
         }
+    }
+
+    public void markTaskAtPositionAsFinished(Context context, int position){
+        tasks.set(position, Task.markAsFinished(context, tasks.get(position)));
     }
 
     public void deleteTask(Context context, int position){
@@ -70,12 +110,12 @@ public class Project implements Serializable{
     }
 
     public void updateTask(Context context, Task task){
-        if (task.getPosition() != tasks.indexOf(task)){
+        if (task.getOrder() != tasks.indexOf(task)){
             tasks.remove(task);
-            if (task.getPosition() == tasks.size()-1){
+            if (task.getOrder() == tasks.size()-1){
                 tasks.add(task);
             }else {
-                tasks.add(task.getPosition(), task);
+                tasks.add(task.getOrder(), task);
             }
         }
         Task.updateTask(context, task);
@@ -84,8 +124,8 @@ public class Project implements Serializable{
 
     private void updatePositions(Context context){
         for (Task task : tasks){
-            if (task.getPosition() != tasks.indexOf(task)){
-                task.setPosition(tasks.indexOf(task));
+            if (task.getOrder() != tasks.indexOf(task)){
+                task.setOrder(tasks.indexOf(task));
                 Task.updateTask(context, task);
             }
         }
@@ -110,28 +150,59 @@ public class Project implements Serializable{
         return tasks.size() == 0;
     }
 
-    public void syncProject(){
-
-    }
-
     public static Project uploadProjectToServer(Context context, Project project){
         ServerCommunicator server = new ServerCommunicator(context);
         HashMap<String, Object> hash = new HashMap<String, Object>();
         hash.put("project",project);
         Project newProject = new Project();
         newProject.setColor(project.color);
-        newProject.setTitle(project.title);
+        newProject.setName(project.name);
         try {
             JSONObject jsonObject = new JSONObject(new Gson().toJson(hash));
-            String json = server.postToEndpointAuthed("projects",jsonObject, true);
+            SharedPreferences sp = context.getSharedPreferences(ActivityUtils.USER_ID_PREF, Activity.MODE_PRIVATE);
+            String json = server.postToEndpointAuthed("users/"+sp.getInt("user_id", 0)+"/projects",jsonObject);
             newProject = new Gson().fromJson(json, Project.class);
+
+            for (Task task : project.getTasks()){
+                task.setProject_id(newProject.getId());
+                newProject.getTasks().add(Task.uploadTaskToServer(context, task));
+            }
         }catch (Exception e){
             e.printStackTrace();
         }
-        for (Task task : project.getTasks()){
-             newProject.getTasks().add(Task.uploadTaskToServer(context, task));
+        return newProject;
+    }
+
+    public static Project updateProjectOnServer(Context context, Project project){
+        ServerCommunicator server = new ServerCommunicator(context);
+        HashMap<String, Object> hash = new HashMap<String, Object>();
+        hash.put("project",project);
+        try {
+            JSONObject jsonObject = new JSONObject(new Gson().toJson(hash));
+            SharedPreferences sp = context.getSharedPreferences(ActivityUtils.USER_ID_PREF, Activity.MODE_PRIVATE);
+            server.postToEndpointAuthed(
+                    "users/"+sp.getInt("user_id", 0)+"/projects/"+project.getId(), jsonObject);
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        return null;
+        return project;
+    }
+
+    public static Project addProjectToDatabase(Context context, Project project){
+        return Project.addProjectToDatabase(context,
+                project.getName(),
+                project.getColor(),
+                project.getId(),
+                project.getCreated_at(),
+                project.getUpdated_at());
+    }
+
+    public static Project addProjectToDatabase(Context context, String name, int color, int serverId, Date created, Date updated){
+        ProjectDataSource source = new ProjectDataSource(context);
+        source.open();
+        Project project = source.createProject(name, color, serverId, created, updated);
+        source.close();
+        return project;
     }
 
     @Override
@@ -141,17 +212,36 @@ public class Project implements Serializable{
 
         Project project = (Project) o;
 
-        if (localId != project.localId) return false;
-        if (serverId != 0 && project.serverId != 0 && serverId != project.serverId) return false;
+        if (id != project.id) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        int result = serverId;
+        int result = id;
         result = 31 * result + localId;
         return result;
+    }
+
+    public void setTasks(ArrayList<Task> tasks) {
+        this.tasks = tasks;
+    }
+
+    public Date getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(Date created_at) {
+        this.created_at = created_at;
+    }
+
+    public Date getUpdated_at() {
+        return updated_at;
+    }
+
+    public void setUpdated_at(Date updated_at) {
+        this.updated_at = updated_at;
     }
 
     public int getColor() {
@@ -162,20 +252,20 @@ public class Project implements Serializable{
         this.color = color;
     }
 
-    public String getTitle() {
-        return title;
+    public String getName() {
+        return name;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public int getServerId() {
-        return localId;
+    public int getId() {
+        return id;
     }
 
-    public void setServerId(int serverId) {
-        this.serverId = serverId;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public int getLocalId() {

@@ -8,8 +8,6 @@ import android.database.sqlite.SQLiteDatabase;
 import com.rndapp.task_feed.models.Task;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,6 +26,8 @@ public class TaskDataSource {
             TaskOpenHelper.COLUMN_TEXT,
             TaskOpenHelper.COLUMN_COMPLETED,
             TaskOpenHelper.COLUMN_POSITION,
+            TaskOpenHelper.COLUMN_CREATED,
+            TaskOpenHelper.COLUMN_UPDATED,
             TaskOpenHelper.COLUMN_POINTS};
 
     public TaskDataSource(Context context) {
@@ -64,13 +64,13 @@ public class TaskDataSource {
 
     public void updateTask(Task task){
         ContentValues values = new ContentValues();
-        values.put(TaskOpenHelper.COLUMN_SERVER_ID, task.getServerId());
-        values.put(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID, task.getProjectId());
+        values.put(TaskOpenHelper.COLUMN_SERVER_ID, task.getId());
+        values.put(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID, task.getProject_id());
         values.put(TaskOpenHelper.COLUMN_POINTS, task.getPoints());
-        values.put(TaskOpenHelper.COLUMN_POSITION, task.getPosition());
-        int complete = task.isCompleted() ? 1 : 0;
+        values.put(TaskOpenHelper.COLUMN_POSITION, task.getOrder());
+        int complete = task.isFinished() ? 1 : 0;
         values.put(TaskOpenHelper.COLUMN_COMPLETED, complete);
-        values.put(TaskOpenHelper.COLUMN_TEXT, task.getText());
+        values.put(TaskOpenHelper.COLUMN_TEXT, task.getName());
 
         database.update(TaskOpenHelper.TABLE_TASKS, values, TaskOpenHelper.COLUMN_ID + " = ?",
                 new String[]{String.valueOf(task.getLocalId())});
@@ -102,13 +102,13 @@ public class TaskDataSource {
 
     private Task cursorToTask(Cursor cursor) {
         Task task = new Task();
-        task.setServerId(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_SERVER_ID)));
+        task.setId(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_SERVER_ID)));
         task.setLocalId(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_ID)));
-        task.setProjectId(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID)));
-        task.setText(cursor.getString(cursor.getColumnIndex(TaskOpenHelper.COLUMN_TEXT)));
+        task.setProject_id(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_PROJECT_SERVER_ID)));
+        task.setName(cursor.getString(cursor.getColumnIndex(TaskOpenHelper.COLUMN_TEXT)));
         task.setPoints(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POINTS)));
-        task.setPosition(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POSITION)));
-        task.setCompleted(1 == cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_COMPLETED)));
+        task.setOrder(cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_POSITION)));
+        task.setFinished(1 == cursor.getInt(cursor.getColumnIndex(TaskOpenHelper.COLUMN_COMPLETED)));
         return task;
     }
 }

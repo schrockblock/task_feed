@@ -24,7 +24,7 @@ import android.util.Log;
 
 public class ServerCommunicator {
 	private Context context;
-	public static final String BASE_URL = "http://queuer-rndapp.rhcloud.com/api/v1/";
+	public static final String BASE_URL = "http://queuer-rndapp.rhcloud.com/api/v1/"; //192.168.11.152:3000
 	public static final String API_KEY_PREFERENCE = "com.rndapp.queuer.api_key_pref";
     public static final String API_KEY_HEADER = "X-Qer-Authorization";
 	
@@ -32,9 +32,7 @@ public class ServerCommunicator {
 		this.context = ctxt;
 	}
 
-    public String postToEndpointAuthed(String endpoint,
-                                       JSONObject postData,
-                                       boolean useJson){
+    public String postToEndpointAuthed(String endpoint, JSONObject postData){
         Log.d("postData", postData.toString());
         SharedPreferences sp = context.getSharedPreferences(API_KEY_PREFERENCE, Activity.MODE_PRIVATE);
         String output = "";
@@ -60,13 +58,11 @@ public class ServerCommunicator {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d(endpoint, output+"\n\n\n");
+        Log.d(endpoint, output+"--------------------------\n\n\n");
         return output;
     }
 
-    public String putToEndpointAuthed(String endpoint,
-                                       JSONObject postData,
-                                       boolean useJson){
+    public String putToEndpointAuthed(String endpoint, JSONObject postData){
         Log.d("postData", postData.toString());
         SharedPreferences sp = context.getSharedPreferences(API_KEY_PREFERENCE, Activity.MODE_PRIVATE);
         String output = "";
@@ -96,9 +92,7 @@ public class ServerCommunicator {
         return output;
     }
 	
-	public String postToEndpointUnauthed(String endpoint, 
-			JSONObject postData, 
-			boolean useJson){
+	public String postToEndpointUnauthed(String endpoint, JSONObject postData){
 		String output = "";
 		HttpClient client = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(BASE_URL + endpoint);
@@ -160,6 +154,9 @@ public class ServerCommunicator {
 		if (response != null){
 			StatusLine statusLine = response.getStatusLine();
 			int statusCode = statusLine.getStatusCode();
+            Log.d("response status code", String.valueOf(statusCode));
+            Log.d("response status line", statusLine.getReasonPhrase());
+            if (response.getEntity() != null){
 				HttpEntity entity = response.getEntity();
 				InputStream content = entity.getContent();
 				BufferedReader reader = new BufferedReader(new InputStreamReader(content));
@@ -167,6 +164,7 @@ public class ServerCommunicator {
 				while ((l = reader.readLine()) != null) {
 					builder.append(l);
 				}
+            }
 		}
 		return builder.toString();
 	}

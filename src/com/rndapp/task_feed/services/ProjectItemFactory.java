@@ -41,7 +41,7 @@ public class ProjectItemFactory implements RemoteViewsService.RemoteViewsFactory
         //associate
         for (Project project : projects) {
             for (Task task : tasks) {
-                if (task.getProjectId() == project.getServerId()) {
+                if (task.getProject_id() == project.getId()) {
                     project.getTasks().add(task);
                 }
             }
@@ -63,13 +63,13 @@ public class ProjectItemFactory implements RemoteViewsService.RemoteViewsFactory
     public RemoteViews getViewAt(int position) {
         RemoteViews item = new RemoteViews(context.getPackageName(), R.layout.list_widget_item);
 
-        item.setTextViewText(R.id.list_widget_item, projects.get(position).getTitle() + ": "
+        item.setTextViewText(R.id.list_widget_item, projects.get(position).getName() + ": "
                 + projects.get(position).getFirstTaskText());
 
         Intent i = new Intent();
         Bundle bundle = new Bundle();
 
-        bundle.putString(ListWidgetProvider.PROJECT_TASK, projects.get(position).getTitle() + ": "
+        bundle.putString(ListWidgetProvider.PROJECT_TASK, projects.get(position).getName() + ": "
                 + projects.get(position).getFirstTaskText());
         i.putExtras(bundle);
         item.setOnClickFillInIntent(R.id.list_widget_item, i);

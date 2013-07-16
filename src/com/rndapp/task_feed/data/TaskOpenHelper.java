@@ -22,6 +22,8 @@ public class TaskOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_POINTS = "points";
     public static final String COLUMN_COMPLETED = "completed";
     public static final String COLUMN_POSITION = "position";
+    public static final String COLUMN_CREATED = "created_at";
+    public static final String COLUMN_UPDATED = "updated_at";
 
     private static final String DATABASE_NAME = "tasks.db";
     private static final int DATABASE_VERSION = 1;
@@ -35,7 +37,9 @@ public class TaskOpenHelper extends SQLiteOpenHelper {
             + COLUMN_TEXT + " text not null, "
             + COLUMN_POINTS + " integer, "
             + COLUMN_POSITION + " integer, "
-            + COLUMN_COMPLETED + " integer "
+            + COLUMN_CREATED + " integer, "
+            + COLUMN_UPDATED + " integer, "
+            + COLUMN_COMPLETED + " integer"
             + ");";
 
     public TaskOpenHelper(Context context) {

@@ -9,6 +9,7 @@ import java.util.List;
  * Time: 2:40 PM
  */
 public class User {
+    private int id;
     private String username;
     private List<Project> projects;
 
@@ -26,5 +27,13 @@ public class User {
 
     public void setProjects(List<Project> projects) {
         this.projects = projects;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

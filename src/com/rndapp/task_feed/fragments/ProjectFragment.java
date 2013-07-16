@@ -2,6 +2,7 @@ package com.rndapp.task_feed.fragments;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,7 +62,7 @@ public class ProjectFragment extends SherlockFragment {
                         new SwipeDismissListViewTouchListener.OnDismissCallback() {
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
-                                    project.deleteTask(getActivity(), position);
+                                    project.markTaskAtPositionAsFinished(getActivity(), adjustPosition(position));
                                 }
                                 adapter.notifyDataSetChanged();
                             }
@@ -72,11 +73,21 @@ public class ProjectFragment extends SherlockFragment {
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                editTask(project.getTask(position));
+                editTask(project.getTask(adjustPosition(position)));
             }
         });
 
         return rootView;
+    }
+
+    private int adjustPosition(int position){
+        int result = position;
+        for (int i = 0; i < result+1; i++){
+            if (project.getTasks().get(i).isFinished()){
+                result++;
+            }
+        }
+        return result;
     }
 
     @Override
@@ -116,9 +127,9 @@ public class ProjectFragment extends SherlockFragment {
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 Task task = new Task();
-                                task.setText(taskTitle.getText().toString());
-                                project.addTask(getActivity(), task);
-                                adapter.notifyDataSetChanged();
+                                task.setName(taskTitle.getText().toString());
+                                task.setProject_id(project.getId());
+                                new UploadNewTaskTask().execute(task);
                             }
                         })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -139,8 +150,8 @@ public class ProjectFragment extends SherlockFragment {
         final EditText taskPos = (EditText)layout.findViewById(R.id.position);
 
         //populate text fields
-        taskTitle.setText(task.getText());
-        taskPos.setText(String.valueOf(task.getPosition()));
+        taskTitle.setText(task.getName());
+        taskPos.setText(String.valueOf(task.getOrder()));
 
         // set dialog message
         alertDialogBuilder
@@ -150,8 +161,9 @@ public class ProjectFragment extends SherlockFragment {
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                task.setText(taskTitle.getText().toString());
-                                task.setPosition(Integer.parseInt(taskPos.getText().toString()));
+                                task.setName(taskTitle.getText().toString());
+                                task.setOrder(Integer.parseInt(taskPos.getText().toString()));
+                                new UpdateTaskTask().execute(task);
                                 project.updateTask(getActivity(), task);
                                 adapter.notifyDataSetChanged();
                             }
@@ -172,7 +184,7 @@ public class ProjectFragment extends SherlockFragment {
         View layout = getSherlockActivity().getLayoutInflater().inflate(R.layout.new_project, null);
 
         final EditText projectTitle = (EditText)layout.findViewById(R.id.projectName);
-        projectTitle.setText(project.getTitle());
+        projectTitle.setText(project.getName());
 
         final View swatch = layout.findViewById(R.id.color_swatch);
 
@@ -237,10 +249,9 @@ public class ProjectFragment extends SherlockFragment {
                 .setPositiveButton("Ok",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                project.setTitle(projectTitle.getText().toString());
+                                project.setName(projectTitle.getText().toString());
                                 project.setColor(swatchColor);
-                                Project.updateProject(getActivity(), project);
-                                delegate.setupNav();
+                                new UpdateProjectTask().execute("");
                             }
                         })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -248,5 +259,54 @@ public class ProjectFragment extends SherlockFragment {
                 });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
+    }
+
+    private class UploadNewTaskTask extends AsyncTask<Task, String, Task> {
+
+        //param[0] = the task to upload
+        @Override
+        protected Task doInBackground(Task... params) {
+            Task task = params[0];
+            task = Task.uploadTaskToServer(getActivity(), task);
+            return task;
+        }
+
+        @Override
+        protected void onPostExecute(Task task){
+            project.addTaskToBeginning(getActivity(), task);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private class UpdateTaskTask extends AsyncTask<Task, String, Task> {
+
+        //param[0] = the task to upload
+        @Override
+        protected Task doInBackground(Task... params) {
+            Task task = params[0];
+            task = Task.updateTaskOnServer(getActivity(), task);
+            return task;
+        }
+
+        @Override
+        protected void onPostExecute(Task task){
+            project.updateTask(getActivity(), task);
+            adapter.notifyDataSetChanged();
+        }
+    }
+
+    private class UpdateProjectTask extends AsyncTask<String, String, Object> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            project = Project.updateProjectOnServer(getActivity(), project);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o){
+            Project.updateProject(getActivity(), project);
+            delegate.setupNav();
+        }
     }
 }

@@ -15,6 +15,7 @@ import com.actionbarsherlock.app.SherlockActivity;
 import com.google.gson.Gson;
 import com.rndapp.task_feed.R;
 import com.rndapp.task_feed.api.ServerCommunicator;
+import com.rndapp.task_feed.models.ActivityUtils;
 import com.rndapp.task_feed.models.NewUserModel;
 import com.rndapp.task_feed.models.SignInModel;
 import com.rndapp.task_feed.models.User;
@@ -71,7 +72,7 @@ public class CreateAccountActivity extends SherlockActivity implements View.OnCl
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            String json = server.postToEndpointUnauthed("user", newUser, true);
+            String json = server.postToEndpointUnauthed("users", newUser);
 
             Log.d("JSON Received:", json);
 
@@ -80,9 +81,10 @@ public class CreateAccountActivity extends SherlockActivity implements View.OnCl
                     JSONObject jsob = new JSONObject(json);
                     if (!jsob.getString("api_key").equals("null")){
                         String apiKey = jsob.getString("api_key");
-                        saveApiKey(apiKey);
+                        ActivityUtils.saveApiKey(CreateAccountActivity.this, apiKey);
                         //create user using Gson
                         user = new Gson().fromJson(json, User.class);
+                        ActivityUtils.saveUserId(CreateAccountActivity.this, user.getId());
                     }else if (jsob.has("errors")){
                         //error
                         errored = true;
@@ -106,14 +108,6 @@ public class CreateAccountActivity extends SherlockActivity implements View.OnCl
         protected void onProgressUpdate(String... values) {
             super.onProgressUpdate(values);
 
-        }
-
-        private void saveApiKey(String apiKey){
-            SharedPreferences sp = getSharedPreferences(ServerCommunicator.API_KEY_PREFERENCE, Activity.MODE_PRIVATE);
-            SharedPreferences.Editor editPrefs = sp.edit();
-            //store api key
-            editPrefs.putString("api_key", apiKey);
-            editPrefs.commit();
         }
 
         @Override

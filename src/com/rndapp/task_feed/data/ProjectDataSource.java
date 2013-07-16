@@ -1,6 +1,7 @@
 package com.rndapp.task_feed.data;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -23,6 +24,8 @@ public class ProjectDataSource {
     private String[] allColumns = { ProjectOpenHelper.COLUMN_ID,
             ProjectOpenHelper.COLUMN_SERVER_ID,
             ProjectOpenHelper.COLUMN_COLOR,
+            ProjectOpenHelper.COLUMN_CREATED,
+            ProjectOpenHelper.COLUMN_UPDATED,
             ProjectOpenHelper.COLUMN_TITLE};
 
     public ProjectDataSource(Context context) {
@@ -37,11 +40,13 @@ public class ProjectDataSource {
         dbHelper.close();
     }
 
-    public Project createProject(String title, int color, int serverId) {
+    public Project createProject(String title, int color, int serverId, Date created, Date updated) {
         ContentValues values = new ContentValues();
         values.put(ProjectOpenHelper.COLUMN_SERVER_ID, serverId);
         values.put(ProjectOpenHelper.COLUMN_COLOR, color);
         values.put(ProjectOpenHelper.COLUMN_TITLE, title);
+        values.put(ProjectOpenHelper.COLUMN_UPDATED, updated.getTime());
+        values.put(ProjectOpenHelper.COLUMN_CREATED, created.getTime());
         long insertId = database.insert(ProjectOpenHelper.TABLE_PROJECTS, null,
                 values);
         Cursor cursor = database.query(ProjectOpenHelper.TABLE_PROJECTS,
@@ -55,9 +60,11 @@ public class ProjectDataSource {
 
     public void updateProject(Project project){
         ContentValues values = new ContentValues();
-        values.put(ProjectOpenHelper.COLUMN_SERVER_ID, project.getServerId());
+        values.put(ProjectOpenHelper.COLUMN_SERVER_ID, project.getId());
         values.put(ProjectOpenHelper.COLUMN_COLOR, project.getColor());
-        values.put(ProjectOpenHelper.COLUMN_TITLE, project.getTitle());
+        values.put(ProjectOpenHelper.COLUMN_TITLE, project.getName());
+        values.put(ProjectOpenHelper.COLUMN_UPDATED, project.getUpdated_at().getTime());
+        values.put(ProjectOpenHelper.COLUMN_CREATED, project.getCreated_at().getTime());
 
         database.update(ProjectOpenHelper.TABLE_PROJECTS,
                 values,
@@ -93,9 +100,11 @@ public class ProjectDataSource {
     private Project cursorToProject(Cursor cursor) {
         Project project = new Project();
         project.setLocalId(cursor.getInt(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_ID)));
-        project.setServerId(cursor.getInt(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_SERVER_ID)));
+        project.setId(cursor.getInt(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_SERVER_ID)));
         project.setColor(cursor.getInt(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_COLOR)));
-        project.setTitle(cursor.getString(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_TITLE)));
+        project.setName(cursor.getString(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_TITLE)));
+        project.setCreated_at(new Date(cursor.getLong(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_CREATED))));
+        project.setUpdated_at(new Date(cursor.getLong(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_UPDATED))));
         return project;
     }
 }

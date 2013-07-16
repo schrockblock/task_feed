@@ -19,6 +19,8 @@ public class ProjectOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_SERVER_ID = "id";
     public static final String COLUMN_TITLE = "title";
     public static final String COLUMN_COLOR = "color";
+    public static final String COLUMN_CREATED = "created_at";
+    public static final String COLUMN_UPDATED = "updated_at";
 
     private static final String DATABASE_NAME = "projects.db";
     private static final int DATABASE_VERSION = 1;
@@ -29,7 +31,9 @@ public class ProjectOpenHelper extends SQLiteOpenHelper {
             + " integer primary key autoincrement, "
             + COLUMN_SERVER_ID + " integer, "
             + COLUMN_TITLE + " text not null, "
-            + COLUMN_COLOR + " integer"
+            + COLUMN_COLOR + " integer, "
+            + COLUMN_CREATED + " integer, "
+            + COLUMN_UPDATED + " integer"
             + ");";
 
     public ProjectOpenHelper(Context context) {
