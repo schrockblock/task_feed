@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.actionbarsherlock.app.SherlockFragment;
@@ -14,10 +15,15 @@ import com.actionbarsherlock.view.MenuInflater;
 import com.actionbarsherlock.view.MenuItem;
 import com.rndapp.task_feed.R;
 import com.rndapp.task_feed.adapters.TaskListAdapter;
+import com.rndapp.task_feed.async_tasks.UpdateTaskTask;
+import com.rndapp.task_feed.async_tasks.UploadNewTaskTask;
 import com.rndapp.task_feed.interfaces.ProjectDisplayer;
+import com.rndapp.task_feed.interfaces.TaskDisplayer;
 import com.rndapp.task_feed.listeners.SwipeDismissListViewTouchListener;
 import com.rndapp.task_feed.models.Project;
 import com.rndapp.task_feed.models.Task;
+
+import java.lang.reflect.Field;
 
 /**
  * Created with IntelliJ IDEA.
@@ -26,7 +32,7 @@ import com.rndapp.task_feed.models.Task;
  * Time: 1:33 PM
  *
  */
-public class ProjectFragment extends SherlockFragment {
+public class ProjectFragment extends SherlockFragment implements TaskDisplayer{
     public ProjectDisplayer delegate;
     private Project project;
     private TaskListAdapter adapter;
@@ -102,9 +108,15 @@ public class ProjectFragment extends SherlockFragment {
         if (item.getTitle().equals(getString(R.string.action_add_task))){
             //new task
             createNewTask();
-        } else{
+        } else if (item.getItemId() == R.id.action_edit_project){
             //edit project
             editProject();
+        } else if (item.getItemId() == R.id.action_hide_project){
+            //edit project
+            hideProject();
+        } else if (item.getItemId() == R.id.action_delete_project){
+            //edit project
+            deleteProject();
         }
         return true;
     }
@@ -129,7 +141,7 @@ public class ProjectFragment extends SherlockFragment {
                                 Task task = new Task();
                                 task.setName(taskTitle.getText().toString());
                                 task.setProject_id(project.getId());
-                                new UploadNewTaskTask().execute(task);
+                                new UploadNewTaskTask(getActivity(), ProjectFragment.this).execute(task);
                             }
                         })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -163,7 +175,7 @@ public class ProjectFragment extends SherlockFragment {
                             public void onClick(DialogInterface dialog, int id) {
                                 task.setName(taskTitle.getText().toString());
                                 task.setOrder(Integer.parseInt(taskPos.getText().toString()));
-                                new UpdateTaskTask().execute(task);
+                                new UpdateTaskTask(getActivity(), ProjectFragment.this).execute(task);
                                 project.updateTask(getActivity(), task);
                                 adapter.notifyDataSetChanged();
                             }
@@ -261,38 +273,33 @@ public class ProjectFragment extends SherlockFragment {
         alertDialog.show();
     }
 
-    private class UploadNewTaskTask extends AsyncTask<Task, String, Task> {
-
-        //param[0] = the task to upload
-        @Override
-        protected Task doInBackground(Task... params) {
-            Task task = params[0];
-            task = Task.uploadTaskToServer(getActivity(), task);
-            return task;
-        }
-
-        @Override
-        protected void onPostExecute(Task task){
-            project.addTaskToBeginning(getActivity(), task);
-            adapter.notifyDataSetChanged();
-        }
+    private void hideProject(){
+        project.setHidden(!project.isHidden());
+        Project.updateProject(getActivity(), project);
+        delegate.setupNav(null);
     }
 
-    private class UpdateTaskTask extends AsyncTask<Task, String, Task> {
+    private void deleteProject(){
 
-        //param[0] = the task to upload
-        @Override
-        protected Task doInBackground(Task... params) {
-            Task task = params[0];
-            task = Task.updateTaskOnServer(getActivity(), task);
-            return task;
-        }
+    }
 
-        @Override
-        protected void onPostExecute(Task task){
-            project.updateTask(getActivity(), task);
-            adapter.notifyDataSetChanged();
-        }
+    @Override
+    public void setupForAsync() {
+        delegate.setupForAsync();
+    }
+
+    @Override
+    public void taskUpdated(Task task) {
+        delegate.asyncEnded();
+        project.updateTask(getActivity(), task);
+        adapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void taskCreated(Task task) {
+        delegate.asyncEnded();
+        project.addTaskToBeginning(getActivity(), task);
+        adapter.notifyDataSetChanged();
     }
 
     private class UpdateProjectTask extends AsyncTask<String, String, Object> {
@@ -306,7 +313,7 @@ public class ProjectFragment extends SherlockFragment {
         @Override
         protected void onPostExecute(Object o){
             Project.updateProject(getActivity(), project);
-            delegate.setupNav();
+            delegate.setupNav(null);
         }
     }
 }

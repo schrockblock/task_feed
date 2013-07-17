@@ -59,7 +59,7 @@ public class FeedFragment extends SherlockFragment {
                         new SwipeDismissListViewTouchListener.OnDismissCallback() {
                             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 for (int position : reverseSortedPositions) {
-                                    new RemoveItemTask().execute(position);
+                                    new RemoveItemTask().execute(adjustPosition(position));
                                 }
                                 adapter.notifyDataSetChanged();
                             }
@@ -79,10 +79,16 @@ public class FeedFragment extends SherlockFragment {
         return rootView;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        adapter.notifyDataSetChanged();
+    }
+
     private int adjustPosition(int position){
         int result = position;
         for (int i = 0; i < result+1; i++){
-            if (projects.get(i).isEmpty()){
+            if (projects.get(i).isEmpty() || projects.get(i).isHidden()){
                 result++;
             }
         }
@@ -226,7 +232,7 @@ public class FeedFragment extends SherlockFragment {
 
         @Override
         protected void onPostExecute(Project project){
-            delegate.setupNav();
+            delegate.setupNav(null);
             getSherlockActivity().getSupportActionBar().setSelectedNavigationItem(
                     projects.indexOf(project) + 1);
         }

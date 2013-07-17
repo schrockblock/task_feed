@@ -26,6 +26,7 @@ public class ProjectDataSource {
             ProjectOpenHelper.COLUMN_COLOR,
             ProjectOpenHelper.COLUMN_CREATED,
             ProjectOpenHelper.COLUMN_UPDATED,
+            ProjectOpenHelper.COLUMN_HIDDEN,
             ProjectOpenHelper.COLUMN_TITLE};
 
     public ProjectDataSource(Context context) {
@@ -47,6 +48,8 @@ public class ProjectDataSource {
         values.put(ProjectOpenHelper.COLUMN_TITLE, title);
         values.put(ProjectOpenHelper.COLUMN_UPDATED, updated.getTime());
         values.put(ProjectOpenHelper.COLUMN_CREATED, created.getTime());
+        int hidden = 0;
+        values.put(ProjectOpenHelper.COLUMN_HIDDEN, hidden);
         long insertId = database.insert(ProjectOpenHelper.TABLE_PROJECTS, null,
                 values);
         Cursor cursor = database.query(ProjectOpenHelper.TABLE_PROJECTS,
@@ -65,6 +68,8 @@ public class ProjectDataSource {
         values.put(ProjectOpenHelper.COLUMN_TITLE, project.getName());
         values.put(ProjectOpenHelper.COLUMN_UPDATED, project.getUpdated_at().getTime());
         values.put(ProjectOpenHelper.COLUMN_CREATED, project.getCreated_at().getTime());
+        int hidden = project.isHidden() ? 1 : 0;
+        values.put(ProjectOpenHelper.COLUMN_HIDDEN, hidden);
 
         database.update(ProjectOpenHelper.TABLE_PROJECTS,
                 values,
@@ -105,6 +110,7 @@ public class ProjectDataSource {
         project.setName(cursor.getString(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_TITLE)));
         project.setCreated_at(new Date(cursor.getLong(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_CREATED))));
         project.setUpdated_at(new Date(cursor.getLong(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_UPDATED))));
+        project.setHidden(1 == cursor.getInt(cursor.getColumnIndex(ProjectOpenHelper.COLUMN_HIDDEN)));
         return project;
     }
 }

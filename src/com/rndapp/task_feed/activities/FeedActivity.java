@@ -1,23 +1,16 @@
 package com.rndapp.task_feed.activities;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 
-import android.os.Handler;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import com.actionbarsherlock.app.ActionBar;
 import com.actionbarsherlock.app.SherlockFragmentActivity;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.rndapp.task_feed.R;
-import com.rndapp.task_feed.api.ServerCommunicator;
+import com.rndapp.task_feed.async_tasks.DownloadProjectsTask;
 import com.rndapp.task_feed.broadcast_receivers.ListWidgetProvider;
 import com.rndapp.task_feed.data.ProjectDataSource;
 import com.rndapp.task_feed.data.TaskDataSource;
@@ -25,13 +18,8 @@ import com.rndapp.task_feed.fragments.FeedFragment;
 import com.rndapp.task_feed.fragments.ProjectFragment;
 import com.rndapp.task_feed.interfaces.ProjectDisplayer;
 import com.rndapp.task_feed.models.*;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 public class FeedActivity extends SherlockFragmentActivity implements
 		ActionBar.OnNavigationListener, ProjectDisplayer {
@@ -49,14 +37,27 @@ public class FeedActivity extends SherlockFragmentActivity implements
 		setContentView(R.layout.activity_feed);
 
         //load projects
-        loadProjects();
+        projects = ActivityUtils.loadProjectsFromDatabase(this);
 
-        setupNav();
+        setupNav(null);
 
-        new DownloadProjectsTask().execute("");
+        new DownloadProjectsTask(this, this).execute(projects);
 	}
 
-    public void setupNav(){
+    public void setupForAsync(){
+        findViewById(R.id.loading_bar).setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void asyncEnded() {
+        findViewById(R.id.loading_bar).setVisibility(View.GONE);
+    }
+
+    public void setupNav(ArrayList<Project> projectArrayList){
+        if (projectArrayList != null){
+            projects = projectArrayList;
+        }
+
         // Set up the action bar to show a dropdown list.
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayShowTitleEnabled(false);
@@ -76,6 +77,10 @@ public class FeedActivity extends SherlockFragmentActivity implements
                 new ArrayAdapter<String>(actionBar.getThemedContext(),
                         android.R.layout.simple_list_item_1,
                         android.R.id.text1, dropdownTitles), this);
+
+        asyncEnded();
+
+        getSupportActionBar().setSelectedNavigationItem(0);
     }
 
 	@Override
@@ -112,140 +117,6 @@ public class FeedActivity extends SherlockFragmentActivity implements
             switchFragBack(fragment3);
         }
         return true;
-    }
-
-    private void loadProjects(){
-        //load projects
-        ProjectDataSource projectDataSource = new ProjectDataSource(this);
-        projectDataSource.open();
-        projects = projectDataSource.getAllProjects();
-        projectDataSource.close();
-
-        //load tasks
-        TaskDataSource taskDataSource = new TaskDataSource(this);
-        taskDataSource.open();
-        ArrayList<Task> tasks = taskDataSource.getAllTasks();
-        taskDataSource.close();
-
-        //associate
-        for (Project project : projects){
-            for (Task task : tasks){
-                if (task.getProject_id() == project.getId()){
-                    project.getTasks().add(task);
-                }
-            }
-        }
-
-        //sort
-        for (final Project project : projects){
-            project.sortTasks();
-        }
-    }
-
-    private class DownloadProjectsTask extends AsyncTask<String, String, Object> {
-
-        @Override
-        protected Object doInBackground(String... params) {
-            downloadProjectsFromServer();
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values) {
-            super.onProgressUpdate(values);
-
-        }
-
-        @Override
-        protected void onPostExecute(Object o){
-            setupNav();
-        }
-    }
-
-    private void downloadProjectsFromServer(){
-        ArrayList<Project> serverProjects;
-        ServerCommunicator server = new ServerCommunicator(this);
-        try {
-            SharedPreferences sp = getSharedPreferences(ActivityUtils.USER_ID_PREF, Activity.MODE_PRIVATE);
-            String json = server.getEndpointAuthed("users/" + sp.getInt("user_id", 0) + "/projects");
-            Type listOfProjects = new TypeToken<List<Project>>(){}.getType();
-            serverProjects = new Gson().fromJson(json, listOfProjects);
-
-            syncProjectsWithServer(serverProjects);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private void syncProjectsWithServer(List<Project> serverProjects){
-        for (Project project : projects){
-            boolean isOnServer = false;
-            if (serverProjects != null){
-                for (Project serverProject : serverProjects){
-                    if (project.equals(serverProject)) {
-                        isOnServer = true;
-                    }
-                }
-            }
-            if (!isOnServer) Project.uploadProjectToServer(this, project);
-        }
-
-        if (serverProjects != null){
-            for (Project serverProject : serverProjects) {
-                boolean isInDatabase = false;
-                int indexOfProject = 0;
-                Project syncedProject = null;
-                for (Project project : projects){
-                    if (project.equals(serverProject)){
-                        isInDatabase = true;
-                        indexOfProject = projects.indexOf(project);
-                        syncedProject = syncProjects(project, serverProject);
-                    }
-                }
-                if (!isInDatabase) {
-                    Project project = Project.addProjectToDatabase(this, serverProject);
-                    for (Task task : serverProject.getTasks()){
-                        project.addTaskRespectingOrder(this, task);
-                    }
-                    projects.add(project);
-                }else if (syncedProject != null){
-                    projects.set(indexOfProject, syncedProject);
-                }
-            }
-        }
-    }
-
-    private Project syncProjects(Project localProject, Project remoteProject){
-        Project syncedProject = null;
-        if (remoteProject == null){
-            return localProject;
-        }else {
-            syncedProject =
-                    localProject.getUpdated_at().before(remoteProject.getUpdated_at()) ? remoteProject : localProject;
-        }
-
-        syncedProject.setTasks(syncTasks(localProject.getTasks(), remoteProject.getTasks()));
-        return syncedProject;
-    }
-
-    private ArrayList<Task> syncTasks(ArrayList<Task> localTasks, ArrayList<Task> remoteTasks){
-        ArrayList<Task> syncedTasks = new ArrayList<Task>();
-        for (Task task : localTasks){
-            boolean isOnServer = false;
-            for (Task serverTask : remoteTasks){
-                if (serverTask.equals(task)){
-                    isOnServer = true;
-                    if (task.getUpdated_at().before(serverTask.getUpdated_at())){
-                        //take the server version
-                        syncedTasks.add(serverTask);
-                    }
-                }
-            }
-            if (!isOnServer){
-                syncedTasks.add(Task.uploadTaskToServer(this, task));
-            }
-        }
-        return syncedTasks;
     }
 
     private void switchFragBack(Fragment frag){

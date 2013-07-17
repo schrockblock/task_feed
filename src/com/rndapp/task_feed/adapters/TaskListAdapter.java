@@ -64,4 +64,10 @@ public class TaskListAdapter extends BaseAdapter {
         ((TextView)convertView.findViewById(R.id.tv_task)).setText(task.getName());
         return convertView;
     }
+
+    @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        removeFinishedTasks();
+    }
 }

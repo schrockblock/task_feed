@@ -93,6 +93,7 @@ public class ServerCommunicator {
     }
 	
 	public String postToEndpointUnauthed(String endpoint, JSONObject postData){
+        Log.d("postData", postData.toString());
 		String output = "";
 		HttpClient client = new DefaultHttpClient();
 		HttpPost httpPost = new HttpPost(BASE_URL + endpoint);

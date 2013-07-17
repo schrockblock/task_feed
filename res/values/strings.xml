@@ -7,6 +7,8 @@
     <string name="action_add_project">Add Project</string>
     <string name="action_logout">Logout</string>
     <string name="action_edit_project">Edit Project</string>
+    <string name="action_hide_project">Hide/Unhide Project</string>
+    <string name="action_delete_project">Delete Project</string>
     <string name="username_hint">username or email</string>
     <string name="pwd_hint">password</string>
     <string name="remember_me">Remember me</string>

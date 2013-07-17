@@ -21,6 +21,7 @@ public class ProjectOpenHelper extends SQLiteOpenHelper {
     public static final String COLUMN_COLOR = "color";
     public static final String COLUMN_CREATED = "created_at";
     public static final String COLUMN_UPDATED = "updated_at";
+    public static final String COLUMN_HIDDEN = "hidden";
 
     private static final String DATABASE_NAME = "projects.db";
     private static final int DATABASE_VERSION = 1;
@@ -32,6 +33,7 @@ public class ProjectOpenHelper extends SQLiteOpenHelper {
             + COLUMN_SERVER_ID + " integer, "
             + COLUMN_TITLE + " text not null, "
             + COLUMN_COLOR + " integer, "
+            + COLUMN_HIDDEN + " integer, "
             + COLUMN_CREATED + " integer, "
             + COLUMN_UPDATED + " integer"
             + ");";

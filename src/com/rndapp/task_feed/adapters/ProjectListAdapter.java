@@ -31,7 +31,7 @@ public class ProjectListAdapter extends BaseAdapter {
 
     public void removeEmptyProjects(){
         for (Project project : projects){
-            if (project.isEmpty()){
+            if (project.isEmpty() || project.isHidden()){
                 projects.remove(project);
                 removeEmptyProjects();
                 break;
@@ -66,5 +66,11 @@ public class ProjectListAdapter extends BaseAdapter {
         tv.setText(project.getName() + ": " + project.getFirstTaskText());
         tv.setBackgroundColor(project.getColor());
         return convertView;
+    }
+
+    @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        removeEmptyProjects();
     }
 }

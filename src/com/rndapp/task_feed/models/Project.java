@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.rndapp.task_feed.api.ServerCommunicator;
+import com.rndapp.task_feed.async_tasks.UpdateTaskTask;
 import com.rndapp.task_feed.data.ProjectDataSource;
 import com.rndapp.task_feed.data.TaskDataSource;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ public class Project implements Serializable{
     private Date updated_at;
     private ArrayList<Task> tasks = new ArrayList<Task>();
     private int color;
+    private boolean isHidden = false;
 
     public Project(String name, int color) {
         this.name = name;
@@ -127,6 +129,7 @@ public class Project implements Serializable{
             if (task.getOrder() != tasks.indexOf(task)){
                 task.setOrder(tasks.indexOf(task));
                 Task.updateTask(context, task);
+                new UpdateTaskTask(context, null).execute(task);
             }
         }
     }
@@ -147,7 +150,7 @@ public class Project implements Serializable{
     }
 
     public boolean isEmpty(){
-        return tasks.size() == 0;
+        return tasks.size() == 0 || isHidden();
     }
 
     public static Project uploadProjectToServer(Context context, Project project){
@@ -222,6 +225,14 @@ public class Project implements Serializable{
         int result = id;
         result = 31 * result + localId;
         return result;
+    }
+
+    public boolean isHidden() {
+        return isHidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        isHidden = hidden;
     }
 
     public void setTasks(ArrayList<Task> tasks) {

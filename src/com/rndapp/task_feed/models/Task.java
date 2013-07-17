@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import com.google.gson.Gson;
 import com.rndapp.task_feed.api.ServerCommunicator;
+import com.rndapp.task_feed.async_tasks.UpdateTaskTask;
 import com.rndapp.task_feed.data.TaskDataSource;
+import com.rndapp.task_feed.interfaces.TaskDisplayer;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -60,7 +62,7 @@ public class Task implements Serializable, Comparable<Task>{
 
     public static Task markAsFinished(Context context, Task task){
         task.setFinished(true);
-        task = Task.updateTaskOnServer(context, task);
+        new UpdateTaskTask(context, null).execute(task);
         updateTask(context, task);
         return task;
     }
@@ -78,6 +80,7 @@ public class Task implements Serializable, Comparable<Task>{
         }catch (Exception e){
             e.printStackTrace();
         }
+        Task.updateTask(context, task);
         return task;
     }
 

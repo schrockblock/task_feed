@@ -167,6 +167,7 @@ public class LoginActivity extends SherlockActivity implements View.OnClickListe
                     if (!errored && user != null){
                         LoginActivity.this
                                 .startActivity(new Intent(LoginActivity.this, FeedActivity.class));
+                        LoginActivity.this.finish();
                     }else{
                         ((TextView)findViewById(R.id.update)).setText(errorText);
                     }
